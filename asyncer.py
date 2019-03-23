@@ -24,7 +24,6 @@ class Asyncer:
         :param args: аргументы для функции args.
         :return: результат выполнения func от args.
         """
-        await asyncio.sleep(1)
         return self.func(*args)
 
     async def _async_tasker(self, args):
