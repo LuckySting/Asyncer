@@ -36,18 +36,22 @@ class Asyncer:
         return await asyncio.gather(*tasks)
 
     @classmethod
-    async def _fetch(cls, session, url):
+    async def _fetch(cls, session, url, mode='text'):
         """
         Асинхронный запрос по адресу url.
         :param session: сессия.
         :param url: адрес.
         :return: результат запроса.
         """
+        print(url)
         async with session.get(url) as response:
-            return await response.text()
+            if mode == 'json':
+                return await response.json()
+            else:
+                return await response.text()
 
     @classmethod
-    async def _fetcher(cls, urls):
+    async def _fetcher(cls, urls, mode):
         """
         Создание списка запросов.
         :param: список адресов.
@@ -56,13 +60,14 @@ class Asyncer:
         tasks = []
         async with aiohttp.ClientSession() as session:
             for url in urls:
-                tasks.append(asyncio.ensure_future(cls._fetch(session, url)))
+                tasks.append(asyncio.ensure_future(cls._fetch(session, url, mode)))
             return await asyncio.gather(*tasks)
 
     @classmethod
-    def async_fetch(cls, urls):
+    def async_fetch(cls, urls, mode):
         """
         Отправка асинхронных запросов по адресам urls.
+        :param mode: тип ответа, json или text, по умолчанию text.
         :param urls: список адресов для запросов.
         :return: результаты запросов.
         """
@@ -70,7 +75,7 @@ class Asyncer:
             ioloop = asyncio.get_event_loop()
         except RuntimeError:
             ioloop = asyncio.new_event_loop()
-        return ioloop.run_until_complete(cls._fetcher(urls))
+        return ioloop.run_until_complete(cls._fetcher(urls, mode))
 
     def async_run(self, args):
         """
