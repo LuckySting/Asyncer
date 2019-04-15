@@ -36,16 +36,18 @@ class Asyncer:
         return await asyncio.gather(*tasks)
 
     @classmethod
-    async def _fetch(cls, url, mode='text'):
+    async def _fetch(cls, url, mode='text', timeout=0):
         """
         Асинхронный запрос по адресу url.
-        :param session: сессия.
+        :param timeout: предельное вермя подключения.
         :param url: адрес.
         :return: Адрес и результат запроса.
         """
         try:
-            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+            timeout = aiohttp.ClientTimeout(timeout)
+            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False), timeout=timeout) as session:
                 async with session.get(url) as response:
+                    print('{} - {}'.format(url, 'wait... '))
                     if mode == 'json':
                         resp = await response.json()
                     else:
@@ -57,21 +59,23 @@ class Asyncer:
             return {'url': url, 'response': None}
 
     @classmethod
-    async def _fetcher(cls, urls, mode='text'):
+    async def _fetcher(cls, urls, mode='text', timeout=0):
         """
         Создание списка запросов.
+        :param timeout: предельное вермя подключения.
         :param: список адресов.
         :return: спискок результатов запросов.
         """
         tasks = []
         for url in urls:
-            tasks.append(asyncio.ensure_future(cls._fetch(url, mode)))
+            tasks.append(asyncio.ensure_future(cls._fetch(url, mode, timeout)))
         return await asyncio.gather(*tasks)
 
     @classmethod
-    def async_fetch(cls, urls, mode='text'):
+    def async_fetch(cls, urls, mode='text', timeout=0):
         """
         Отправка асинхронных запросов по адресам urls.
+        :param timeout: предельное вермя подключения.
         :param mode: тип ответа, json или text, по умолчанию text.
         :param urls: список адресов для запросов.
         :return: результаты запросов.
